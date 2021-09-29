@@ -1,5 +1,13 @@
 # Kubernetes Admission Webhook for LXCFS
 
+## Note 说明
+
+本项目针对lxscfs的k8s部署问题重新做了修改：
+- custom-lxcfs-image： 重新制作了镜像
+- deployment： 修改了部署lxcfs配置yaml
+- lxcfs.go： 对应lxcfs配置，修改了webhook代码
+
+
 This project shows how to build and deploy an [AdmissionWebhook](https://kubernetes.io/docs/reference/access-authn-authz/extensible-admission-controllers/#admission-webhooks) for [LXCFS](https://github.com/lxc/lxcfs).
 
 ## Prerequisites
