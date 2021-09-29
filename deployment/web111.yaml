@@ -1,0 +1,93 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: web
+  template:
+    metadata:
+      labels:
+        app: web
+    spec:
+      containers:
+      - name: web
+        image: httpd:2.4.32
+        imagePullPolicy: Always
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "500m"
+          limits:
+            memory: "256Mi"
+            cpu: "500m"
+        volumeMounts:
+        # - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        #   name: default-token-gvkdt
+        #   readOnly: true
+        - mountPath: /var/lib/lxc
+          mountPropagation: HostToContainer 
+          name: lxcfs-root
+        - mountPath: /proc/cpuinfo
+          mountPropagation: HostToContainer 
+          name: lxcfs-proc-cpuinfo
+        - mountPath: /proc/meminfo
+          mountPropagation: HostToContainer
+          name: lxcfs-proc-meminfo
+        - mountPath: /proc/diskstats
+          mountPropagation: HostToContainer
+          name: lxcfs-proc-diskstats
+        - mountPath: /proc/stat
+          mountPropagation: HostToContainer
+          name: lxcfs-proc-stat
+        - mountPath: /proc/swaps
+          readOnly: true
+          name: lxcfs-proc-swaps
+        - mountPath: /proc/uptime
+          mountPropagation: HostToContainer
+          name: lxcfs-proc-uptime
+        - mountPath: /proc/loadavg
+          mountPropagation: HostToContainer
+          name: lxcfs-proc-loadavg
+        - mountPath: /sys/devices/system/cpu/online
+          mountPropagation: HostToContainer
+          name: lxcfs-sys-devices-system-cpu-online
+      volumes:
+      - hostPath:
+          path: /var/lib/lxc
+          type: ""
+        name: lxcfs-root
+      - hostPath:
+          path: /var/lib/lxc/lxcfs/proc/cpuinfo
+          type: ""
+        name: lxcfs-proc-cpuinfo
+      - hostPath:
+          path: /var/lib/lxc/lxcfs/proc/diskstats
+          type: ""
+        name: lxcfs-proc-diskstats
+      - hostPath:
+          path: /var/lib/lxc/lxcfs/proc/meminfo
+          type: ""
+        name: lxcfs-proc-meminfo
+      - hostPath:
+          path: /var/lib/lxc/lxcfs/proc/stat
+          type: ""
+        name: lxcfs-proc-stat
+      - hostPath:
+          path: /var/lib/lxc/lxcfs/proc/swaps
+          type: ""
+        name: lxcfs-proc-swaps
+      - hostPath:
+          path: /var/lib/lxc/lxcfs/proc/uptime
+          type: ""
+        name: lxcfs-proc-uptime
+      - hostPath:
+          path: /var/lib/lxc/lxcfs/proc/loadavg
+          type: ""
+        name: lxcfs-proc-loadavg
+      - hostPath:
+          path: /var/lib/lxc/lxcfs/sys/devices/system/cpu/online
+          type: ""
+        name: lxcfs-sys-devices-system-cpu-online

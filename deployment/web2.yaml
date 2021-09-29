@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: web
+  namespace: test-lxcfs
 spec:
   replicas: 2
   selector:
@@ -20,8 +21,18 @@ spec:
         resources:
           requests:
             memory: "256Mi"
-            cpu: "500m"
+            # cpu: "500m"
+            cpu: 1
           limits:
             memory: "256Mi"
-            cpu: "500m"
-        
+            # cpu: "500m"
+            cpu: 1
+        volumeMounts:
+        - mountPath: /dev/shm
+          name: cache-volume
+      volumes:
+        # shm size
+      - emptyDir:
+          medium: Memory
+          sizeLimit: 128Mi
+        name: cache-volume

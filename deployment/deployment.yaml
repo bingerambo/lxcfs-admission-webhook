@@ -16,12 +16,14 @@ spec:
     spec:
       containers:
         - name: lxcfs-admission-webhook
-          image: registry.cn-hangzhou.aliyuncs.com/soolaugust/lxcfs-admission-webhook:v1
+          # image: registry.cn-hangzhou.aliyuncs.com/denverdino/lxcfs-admission-webhook:v1
+          image: lxcfs-admission-webhook:dev
           imagePullPolicy: IfNotPresent
           args:
             - -tlsCertFile=/etc/webhook/certs/cert.pem
             - -tlsKeyFile=/etc/webhook/certs/key.pem
-            - -alsologtostderr
+            # - -alsologtostderr
+            - -logtostderr
             - -v=4
             - 2>&1
           volumeMounts:
@@ -32,3 +34,5 @@ spec:
         - name: webhook-certs
           secret:
             secretName: lxcfs-admission-webhook-certs
+      nodeSelector:
+        node-role.kubernetes.io/master: "true"

@@ -1,7 +1,8 @@
-apiVersion: apps/v1beta2
+apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   name: lxcfs
+  namespace: kube-system
   labels:
     app: lxcfs
 spec:
@@ -19,18 +20,45 @@ spec:
         effect: NoSchedule
       containers:
       - name: lxcfs
-        image: registry.cn-hangzhou.aliyuncs.com/soolaugust/lxcfs:3.1.2
-        imagePullPolicy: Always
+        # image: registry.cn-hangzhou.aliyuncs.com/denverdino/lxcfs:3.1.2
+        image: lxcfs:dev
+        # imagePullPolicy: Always
+        imagePullPolicy: IfNotPresent
+        # command: [ "/bin/sh","-c","chmod u+x /start.sh;/start.sh" ]
+        command: [ "/bin/sh","-c","/start.sh" ]
         securityContext:
           privileged: true
+        env:
+        - name: LD_LIBRARY_PATH
+          value: "$LD_LIBRARY_PATH:/usr/lib64"
+        # custom config      
+        # lifecycle:
+        #   postStart:
+        #     exec:
+        #       command: ["/bin/sh", "-c", "chmod u+x /tmp/container_remount_lxcfs.sh;/tmp/container_remount_lxcfs.sh  2> /dev/null  || true"]
+        #   preStop:
+        #     exec:
+        #       # command: ["/bin/sh", "-c", "nsenter -m/proc/1/ns/mnt fusermount -u /var/lib/lxc/lxcfs 2> /dev/null || true"]
+        #       command: ["/bin/sh", "-c", "nsenter -m/proc/1/ns/mnt fusermount -u /var/lib/lxc/lxcfs 2> /dev/null  || true"]
         volumeMounts:
         - name: cgroup
           mountPath: /sys/fs/cgroup
         - name: lxcfs
-          mountPath: /var/lib/lxcfs
+          # mountPath: /var/lib/lxcfs
+          mountPath: /var/lib/lxc/lxcfs
           mountPropagation: Bidirectional
         - name: usr-local
           mountPath: /usr/local
+        # custom config
+        - name: docker-bin
+          mountPath: /usr/bin/docker
+        - name: docker-sock
+          mountPath: /var/run/docker.sock
+        - name: libltdl-so
+          mountPath: /usr/lib64/libltdl.so.7
+        # configmap
+        - name: lxcfs-remount
+          mountPath: /tmp/container_remount_lxcfs.sh
       volumes:
       - name: cgroup
         hostPath:
@@ -40,5 +68,21 @@ spec:
           path: /usr/local
       - name: lxcfs
         hostPath:
-          path: /var/lib/lxcfs
+          # path: /var/lib/lxcfs
+          path: /var/lib/lxc/lxcfs
           type: DirectoryOrCreate
+      # - name: lxcfs
+      #   emptyDir: {}
+      # custom config
+      - name: docker-bin
+        hostPath:
+          path: /usr/bin/docker
+      - name: docker-sock
+        hostPath:
+          path: /var/run/docker.sock
+      - name: libltdl-so
+        hostPath:
+          path: /usr/lib64/libltdl.so.7
+      - name: lxcfs-remount
+        hostPath:
+          path: /tmp/container_remount_lxcfs.sh
