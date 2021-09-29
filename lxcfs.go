@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/golang/glog"
 	"k8s.io/api/admission/v1beta1"
@@ -14,6 +15,9 @@ import (
 const (
 	defaultAnnotation = "initializer.kubernetes.io/lxcfs"
 	defaultNamespace  = "default"
+	// custom config
+	lxcfsrootName = "lxcfs-root"
+	lxcfsrootPath = "/var/lib/lxc"
 )
 
 var (
@@ -22,7 +26,12 @@ var (
 	initializerName   string
 	namespace         string
 	requireAnnotation bool
+	// custom config
+	HostToContainer  corev1.MountPropagationMode = "HostToContainer"
 )
+
+// lxcfs custom config
+// -v //var/lib/lxc:/var/lib/lxc:rw
 
 // -v /var/lib/lxcfs/proc/cpuinfo:/proc/cpuinfo:rw
 // -v /var/lib/lxcfs/proc/diskstats:/proc/diskstats:rw
@@ -32,46 +41,70 @@ var (
 // -v /var/lib/lxcfs/proc/uptime:/proc/uptime:rw
 // -v /var/lib/lxcfs/proc/loadavg:/proc/loadavg:rw
 var volumeMountsTemplate = []corev1.VolumeMount{
+	// custom config, add MountPropagation filed
+	{
+		Name: lxcfsrootName,
+		MountPath:lxcfsrootPath,
+		MountPropagation: &HostToContainer,
+	},
 
 	{
 		Name:      "lxcfs-proc-cpuinfo",
 		MountPath: "/proc/cpuinfo",
+		MountPropagation: &HostToContainer,
 	},
 	{
 		Name:      "lxcfs-proc-meminfo",
 		MountPath: "/proc/meminfo",
+		MountPropagation: &HostToContainer,
 	},
 	{
 		Name:      "lxcfs-proc-diskstats",
 		MountPath: "/proc/diskstats",
+		MountPropagation: &HostToContainer,
 	},
 	{
 		Name:      "lxcfs-proc-stat",
 		MountPath: "/proc/stat",
+		MountPropagation: &HostToContainer,
 	},
 	{
 		Name:      "lxcfs-proc-swaps",
 		MountPath: "/proc/swaps",
+		MountPropagation: &HostToContainer,
 	},
 	{
 		Name:      "lxcfs-proc-uptime",
 		MountPath: "/proc/uptime",
+		MountPropagation: &HostToContainer,
 	},
 	{
 		Name:      "lxcfs-proc-loadavg",
 		MountPath: "/proc/loadavg",
+		MountPropagation: &HostToContainer,
 	},
 	{
 		Name:      "lxcfs-sys-devices-system-cpu-online",
 		MountPath: "/sys/devices/system/cpu/online",
+		MountPropagation: &HostToContainer,
 	},
 }
 var volumesTemplate = []corev1.Volume{
 	{
+		Name: lxcfsrootName,
+		VolumeSource: corev1.VolumeSource{
+			HostPath: &corev1.HostPathVolumeSource{
+				Path: lxcfsrootPath,
+			},
+		},
+	},
+
+	{
 		Name: "lxcfs-proc-cpuinfo",
 		VolumeSource: corev1.VolumeSource{
 			HostPath: &corev1.HostPathVolumeSource{
-				Path: "/var/lib/lxcfs/proc/cpuinfo",
+				//Path: "/var/lib/lxcfs/proc/cpuinfo",
+				Path: lxcfsrootPath + "/lxcfs/proc/cpuinfo",
 			},
 		},
 	},
@@ -79,7 +112,8 @@ var volumesTemplate = []corev1.Volume{
 		Name: "lxcfs-proc-diskstats",
 		VolumeSource: corev1.VolumeSource{
 			HostPath: &corev1.HostPathVolumeSource{
-				Path: "/var/lib/lxcfs/proc/diskstats",
+				//Path: "/var/lib/lxcfs/proc/diskstats",
+				Path: lxcfsrootPath + "/lxcfs/proc/diskstats",
 			},
 		},
 	},
@@ -87,7 +121,8 @@ var volumesTemplate = []corev1.Volume{
 		Name: "lxcfs-proc-meminfo",
 		VolumeSource: corev1.VolumeSource{
 			HostPath: &corev1.HostPathVolumeSource{
-				Path: "/var/lib/lxcfs/proc/meminfo",
+				//Path: "/var/lib/lxcfs/proc/meminfo",
+				Path: lxcfsrootPath + "/lxcfs/proc/meminfo",
 			},
 		},
 	},
@@ -95,7 +130,8 @@ var volumesTemplate = []corev1.Volume{
 		Name: "lxcfs-proc-stat",
 		VolumeSource: corev1.VolumeSource{
 			HostPath: &corev1.HostPathVolumeSource{
-				Path: "/var/lib/lxcfs/proc/stat",
+				//Path: "/var/lib/lxcfs/proc/stat",
+				Path: lxcfsrootPath + "/lxcfs/proc/stat",
 			},
 		},
 	},
@@ -103,7 +139,8 @@ var volumesTemplate = []corev1.Volume{
 		Name: "lxcfs-proc-swaps",
 		VolumeSource: corev1.VolumeSource{
 			HostPath: &corev1.HostPathVolumeSource{
-				Path: "/var/lib/lxcfs/proc/swaps",
+				//Path: "/var/lib/lxcfs/proc/swaps",
+				Path: lxcfsrootPath + "/lxcfs/proc/swaps",
 			},
 		},
 	},
@@ -111,7 +148,8 @@ var volumesTemplate = []corev1.Volume{
 		Name: "lxcfs-proc-uptime",
 		VolumeSource: corev1.VolumeSource{
 			HostPath: &corev1.HostPathVolumeSource{
-				Path: "/var/lib/lxcfs/proc/uptime",
+				//Path: "/var/lib/lxcfs/proc/uptime",
+				Path: lxcfsrootPath + "/lxcfs/proc/uptime",
 			},
 		},
 	},
@@ -119,7 +157,8 @@ var volumesTemplate = []corev1.Volume{
 		Name: "lxcfs-proc-loadavg",
 		VolumeSource: corev1.VolumeSource{
 			HostPath: &corev1.HostPathVolumeSource{
-				Path: "/var/lib/lxcfs/proc/loadavg",
+				//Path: "/var/lib/lxcfs/proc/loadavg",
+				Path: lxcfsrootPath + "/lxcfs/proc/loadavg",
 			},
 		},
 	},
@@ -127,7 +166,8 @@ var volumesTemplate = []corev1.Volume{
 		Name: "lxcfs-sys-devices-system-cpu-online",
 		VolumeSource: corev1.VolumeSource{
 			HostPath: &corev1.HostPathVolumeSource{
-				Path: "/var/lib/lxcfs/sys/devices/system/cpu/online",
+				//Path: "/var/lib/lxcfs/sys/devices/system/cpu/online",
+				Path: lxcfsrootPath + "/lxcfs/sys/devices/system/cpu/online",
 			},
 		},
 	},
@@ -194,10 +234,15 @@ func createPodPatch(pod *corev1.Pod) ([]byte, error) {
 		},
 	}
 
-	if pod.Annotations == nil || pod.Annotations[admissionWebhookAnnotationStatusKey] == "" {
+	if pod.Annotations == nil {
 		op.Op = "add"
 	} else {
-		op.Op = "replace"
+		op.Op = "add"
+		if pod.Annotations[admissionWebhookAnnotationStatusKey] != "" {
+			op.Op = " replace"
+		}
+		op.Path = "/metadata/annotations/" + escapeJSONPointerValue(admissionWebhookAnnotationStatusKey)
+		op.Value = "mutated"
 	}
 
 	patches = append(patches, op)
@@ -258,4 +303,9 @@ func (whsvr *WebhookServer) validatePod(ar *v1beta1.AdmissionReview) *v1beta1.Ad
 	return &v1beta1.AdmissionResponse{
 		Allowed: true,
 	}
+}
+
+func escapeJSONPointerValue(in string) string {
+	step := strings.Replace(in, "~", "~0", -1)
+	return strings.Replace(step, "/", "~1", -1)
 }

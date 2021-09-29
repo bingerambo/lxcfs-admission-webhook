@@ -1,12 +1,14 @@
 # Kubernetes Admission Webhook for LXCFS
 
 This project shows how to build and deploy an [AdmissionWebhook](https://kubernetes.io/docs/reference/access-authn-authz/extensible-admission-controllers/#admission-webhooks) for [LXCFS](https://github.com/lxc/lxcfs).
-## Note ËµÃ÷
 
-±¾ÏîÄ¿Õë¶ÔlxscfsµÄk8s²¿ÊğÎÊÌâÖØĞÂ×öÁËĞŞ¸Ä£º
-- custom-lxcfs-image£º ÖØĞÂÖÆ×÷ÁË¾µÏñ
-- deployment£º ĞŞ¸ÄÁË²¿ÊğlxcfsÅäÖÃyaml
-- lxcfs.go£º ¶ÔÓ¦lxcfsÅäÖÃ£¬ĞŞ¸ÄÁËwebhook´úÂë
+## Note è¯´æ˜
+
+æœ¬é¡¹ç›®é’ˆå¯¹lxscfsçš„k8séƒ¨ç½²é—®é¢˜é‡æ–°åšäº†ä¿®æ”¹ï¼š
+- custom-lxcfs-imageï¼š é‡æ–°åˆ¶ä½œäº†é•œåƒ
+- deploymentï¼š ä¿®æ”¹äº†éƒ¨ç½²lxcfsé…ç½®yaml
+- lxcfs.goï¼š å¯¹åº”lxcfsé…ç½®ï¼Œä¿®æ”¹äº†webhookä»£ç 
+
 ## Prerequisites
 
 Kubernetes 1.9.0 or above with the `admissionregistration.k8s.io/v1beta1` API enabled. Verify that by the following command:
